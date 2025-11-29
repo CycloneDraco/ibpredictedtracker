@@ -13,7 +13,7 @@ A professional IB (International Baccalaureate) grade tracking web application w
 
 ## How to Use
 
-1. **Open** `index.html` in your web browser
+1. **Open** `https://cyclonedraco.github.io/ibpredictedtracker/` in your web browser
 2. **Add Subjects**: Click "+ Add Subject" and choose between SL or HL
 3. **Add Assessments**: Click on a subject to add grades
 4. **Enable Weighting** (Optional): Go to Settings → enable "Assessment Weighting" to organize by categories
@@ -42,7 +42,7 @@ If all fields are blank, no profile is displayed.
 - **Import**: Restore data from a previously exported JSON file
 - **Clear All**: Delete everything (careful!)
 
-All data is stored in your browser's localStorage and is not sent anywhere.
+**All data is stored in your browser's localStorage and is not sent anywhere.**
 
 ## Technical Details
 
