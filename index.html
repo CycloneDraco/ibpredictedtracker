@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IB Grade Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%232d7d8f' width='100' height='100'/><text x='50' y='65' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>IB</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --teal-primary: #2d7d8f;
+            --teal-hover: #1d5a65;
+            --grade-1-3: #374151;
+            --grade-4-5: #84cc16;
+            --grade-6-7: #22c55e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--teal-primary);
+            margin-bottom: 1rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-picture {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--teal-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+            object-fit: cover;
+        }
+
+        .profile-text {
+            text-align: right;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .profile-grade {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            top: 2px;
+        }
+
+        .nav-tab:hover {
+            color: var(--teal-primary);
+        }
+
+        .nav-tab.active {
+            color: var(--teal-primary);
+            border-bottom-color: var(--teal-primary);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .score-display {
+            background: linear-gradient(135deg, var(--teal-primary) 0%, var(--teal-hover) 100%);
+            color: white;
+            padding: 3rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(45, 125, 143, 0.2);
+        }
+
+        .score-display h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            opacity: 0.95;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-display .score-value {
+            font-size: 4rem;
+            font-weight: 700;
+        }
+
+        .score-display .score-max {
+            font-size: 2rem;
+            opacity: 0.9;
+        }
+
+        .score-display .score-label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .add-subject-card {
+            background-color: var(--bg-secondary);
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-subject-card:hover {
+            border-color: var(--teal-primary);
+            background-color: #fafafa;
+        }
+
+        .add-subject-card button {
+            background-color: var(--teal-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-subject-card button:hover {
+            background-color: var(--teal-hover);
+            transform: translateY(-2px);
+        }
+
+        .add-subject-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .add-subject-card.disabled button {
+            cursor: not-allowed;
+        }
+
+        .subject-card {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .subject-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: var(--teal-primary);
+        }
+
+        .subject-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .subject-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .subject-level {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+            background-color: var(--teal-primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .subject-grade {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .grade-1-3 {
+            background-color: rgba(55, 65, 81, 0.15);
+            color: var(--grade-1-3);
+        }
+
+        .grade-4-5 {
+            background-color: rgba(132, 204, 22, 0.15);
+            color: var(--grade-4-5);
+        }
+
+        .grade-6-7 {
+            background-color: rgba(34, 197, 94, 0.15);
+            color: var(--grade-6-7);
+        }
+
+        .subject-meta {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--teal-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--teal-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+        }
+
+        .modal-overlay.active {
+            display: block;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--teal-primary);
+            box-shadow: 0 0 0 3px rgba(45, 125, 143, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            background-color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn.active {
+            background-color: var(--teal-primary);
+            color: white;
+            border-color: var(--teal-primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-actions .btn-primary {
+            background-color: var(--teal-primary);
+            color: white;
+        }
+
+        .modal-actions .btn-primary:hover {
+            background-color: var(--teal-hover);
+        }
+
+        .modal-actions .btn-secondary {
+            background-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .weight-list {
+            margin-bottom: 1.5rem;
+        }
+
+        .weight-item {
+            background-color: #fafafa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .weight-item:hover {
+            background-color: #f5f5f5;
+            border-color: var(--teal-primary);
+        }
+
+        .weight-info {
+            flex: 1;
+        }
+
+        .weight-name {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .weight-percent {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .weight-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .weight-actions button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .weighting-toggle {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #fafafa;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .weighting-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .weighting-toggle label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .weight-warning {
+            color: #ef4444;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .weight-warning.success {
+            color: #22c55e;
+        }
+
+        .weight-total {
+            font-weight: 700;
+            text-align: right;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .trends-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+
+        .chart-wrapper {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .chart-wrapper canvas {
+            max-height: 400px;
+        }
+
+        .trends-options {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .trends-options h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-option label {
+            cursor: pointer;
+            flex: 1;
+            margin: 0;
+        }
+
+        .checkbox-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .settings-section {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .settings-section h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .settings-actions button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile-setup {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .profile-picture-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-picture-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--teal-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            object-fit: cover;
+        }
+
+        .assessment-item {
+            background-color: #fafafa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+        }
+
+        .assessment-info h4 {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .assessment-info p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0.25rem 0;
+        }
+
+        .assessment-grade {
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 0.25rem;
+        }
+
+        .assessment-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .assessment-actions button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .subject-details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .subject-details-title h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .subject-details-title p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .subject-predicted-grade {
+            text-align: center;
+        }
+
+        .subject-predicted-grade .grade-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .subject-predicted-grade .grade-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+        }
+
+        .max-subjects-warning {
+            text-align: center;
+            color: #ef4444;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-bottom: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .back-button:hover {
+            background-color: #d1d5db;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .trends-container {
+                grid-template-columns: 1fr;
+            }
+
+            .subjects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .score-display .score-value {
+                font-size: 3rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .modal {
+                width: 95%;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <h1>IB Tracker</h1>
+                <div class="nav-tabs">
+                    <button class="nav-tab active" onclick="switchView('dashboard')">Dashboard</button>
+                    <button class="nav-tab" onclick="switchView('trends')">Trends</button>
+                    <button class="nav-tab" onclick="switchView('settings')">Settings</button>
+                </div>
+            </div>
+            <div class="header-right" id="profileHeader"></div>
+        </div>
+    </header>
+
+    <main>
+        <div id="dashboard" class="view active">
+            <div class="score-display">
+                <h2>Predicted Total <span id="weightedLabel" style="display:none;">(Weighted)</span></h2>
+                <div>
+                    <span class="score-value" id="totalScore">0</span>
+                    <span class="score-max">/42</span>
+                </div>
+            </div>
+            <div class="subjects-grid" id="subjectsGrid">
+                <div class="add-subject-card" id="addSubjectCardContainer">
+                    <button onclick="openAddSubjectModal()">+ Add Subject</button>
+                </div>
+            </div>
+            <div class="max-subjects-warning" id="maxSubjectsWarning" style="display: none;">Maximum 6 subjects reached</div>
+        </div>
+
+        <div id="trends" class="view">
+            <div class="trends-container">
+                <div class="chart-wrapper">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+                <div class="trends-options">
+                    <h3>Show Comparison</h3>
+                    <div class="checkbox-group" id="subjectCheckboxes"></div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="updateTrendsChart()">Update Chart</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings" class="view">
+            <div class="settings-section">
+                <h3>Profile Settings</h3>
+                <div class="profile-setup">
+                    <div class="profile-picture-input">
+                        <div class="profile-picture-preview" id="profilePreview">👤</div>
+                        <input type="file" id="profilePicture" accept="image/*" onchange="updateProfilePreview()">
+                        <small style="color: var(--text-secondary);">Upload profile picture (optional)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Name (Optional)</label>
+                        <input type="text" id="profileName" placeholder="e.g., John Doe" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label>Grade (Optional)</label>
+                        <input type="text" id="profileGrade" placeholder="e.g., Grade 11" maxlength="30">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h3>Weighting Options</h3>
+                <div class="weighting-toggle">
+                    <input type="checkbox" id="weightingEnabled" onchange="toggleWeighting()">
+                    <label for="weightingEnabled">Enable Assessment Weighting</label>
+                </div>
+                <p style="font-size: 0.875rem; color: var(--text-secondary);">When enabled, you can assign weights to categories like Tests, Homework, etc. and assessments will be weighted accordingly.</p>
+            </div>
+            <div class="settings-section">
+                <h3>Data Management</h3>
+                <div class="settings-actions">
+                    <button class="btn btn-primary" onclick="exportData()">Export Data</button>
+                    <button class="btn btn-secondary" onclick="importData()">Import Data</button>
+                    <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h3>Statistics</h3>
+                <div id="statsDisplay"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalOverlay" class="modal-overlay" onclick="closeAllModals()"></div>
+
+    <div id="addSubjectModal" class="modal">
+        <div class="modal-header">Add Subject</div>
+        <form onsubmit="handleAddSubject(event)">
+            <div class="form-group">
+                <label>Subject Name</label>
+                <input type="text" id="subjectName" placeholder="e.g., Math AA" required>
+            </div>
+            <div class="form-group">
+                <label>Level</label>
+                <div class="toggle-group">
+                    <button type="button" class="toggle-btn active" data-level="SL" onclick="setSubjectLevel(this)">SL</button>
+                    <button type="button" class="toggle-btn" data-level="HL" onclick="setSubjectLevel(this)">HL</button>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary">Add Subject</button>
+                <button type="button" class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="subjectDetailsModal" class="modal">
+        <div class="subject-details-header">
+            <div class="subject-details-title">
+                <h2 id="detailsSubjectName"></h2>
+                <p id="detailsSubjectLevel"></p>
+            </div>
+            <div class="subject-predicted-grade">
+                <div class="grade-label">Predicted Grade</div>
+                <div class="grade-value" id="detailsPredictedGrade">N/A</div>
+            </div>
+        </div>
+        <div id="assessmentsList" style="margin-bottom: 1.5rem;"></div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="addAssessmentBtn" onclick="openAddAssessmentModal()">Add Assessment</button>
+            <button class="btn btn-danger" onclick="deleteSubjectFromDetails()">Delete Subject</button>
+            <button class="btn btn-secondary" onclick="closeAllModals()">Return</button>
+        </div>
+    </div>
+
+    <div id="weightingModal" class="modal">
+        <div style="margin-bottom: 1.5rem;">
+            <div class="modal-header" style="margin-bottom: 0;">
+                <span id="weightingTitle">Setup Weights</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.875rem;">For: <strong id="weightingSubjectName"></strong></p>
+        </div>
+        <div class="weight-list" id="weightsList"></div>
+        <div class="form-group">
+            <label>Add New Category</label>
+            <input type="text" id="weightCategoryInput" placeholder="e.g., Tests, Homework, Quizzes">
+        </div>
+        <div class="form-group">
+            <label>Weight (%)</label>
+            <input type="number" id="weightPercentInput" min="0" max="100" step="1" placeholder="e.g., 40">
+        </div>
+        <div id="weightWarning" class="weight-warning" style="display: none;"></div>
+        <div class="weight-total">
+            Total Weight: <span id="weightTotal">0</span>%
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="addWeightCategory()">Add Category</button>
+            <button type="button" class="btn btn-secondary" onclick="closeAllModals()">Done</button>
+        </div>
+    </div>
+
+    <div id="weightCategoryModal" class="modal">
+        <div style="margin-bottom: 1.5rem;">
+            <button class="back-button" onclick="goBackToWeighting()">← Back</button>
+            <div class="modal-header" style="margin-bottom: 0;">
+                <span id="weightCategoryTitle"></span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.5rem;" id="weightCategoryPercent"></p>
+        </div>
+        <div id="weightedAssessmentsList" style="margin-bottom: 1.5rem;"></div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="openAddWeightedAssessmentModal()">Add Assessment</button>
+            <button class="btn btn-secondary" onclick="goBackToWeighting()">Back</button>
+        </div>
+    </div>
+
+    <div id="addAssessmentModal" class="modal">
+        <div class="modal-header">Add Assessment</div>
+        <form onsubmit="handleAddAssessment(event)">
+            <div class="form-group">
+                <label>Assessment Name</label>
+                <input type="text" id="assessmentName" placeholder="e.g., Unit Test 1" required>
+            </div>
+            <div class="form-group">
+                <label>IB Grade</label>
+                <select id="assessmentGrade" required>
+                    <option value="">Select Grade</option>
+                    <option value="7">7</option>
+                    <option value="6">6</option>
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Percentage (Optional)</label>
+                <input type="number" id="assessmentPercentage" min="0" max="100" step="0.1" placeholder="e.g., 96.8">
+            </div>
+            <div class="form-group">
+                <label>Raw Grade (Optional)</label>
+                <input type="text" id="assessmentRawGrade" placeholder="e.g., 31/32">
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="assessmentDate" required>
+            </div>
+            <div class="form-group">
+                <label>Notes (Optional)</label>
+                <textarea id="assessmentNotes" placeholder="Add any notes about this assessment..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary">Add Assessment</button>
+                <button type="button" class="btn btn-secondary" id="cancelAssessmentBtn" onclick="cancelAddAssessment()">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'ib_tracker_data';
+        const PROFILE_KEY = 'ib_tracker_profile';
+        const MAX_SUBJECTS = 6;
+        let currentSubjectId = null;
+        let currentWeightCategoryId = null;
+        let trendsChart = null;
+        let isAddingWeightedAssessment = false;
+
+        const subjectColors = ['#2d7d8f','#dc2626','#7c3aed','#db2777','#ea580c','#16a34a'];
+
+        function getGradeClass(grade) {
+            if (grade === 'N/A') return '';
+            grade = parseInt(grade);
+            if (grade >= 6) return 'grade-6-7';
+            if (grade >= 4) return 'grade-4-5';
+            return 'grade-1-3';
+        }
+
+        function getGradeColor(grade) {
+            grade = parseInt(grade);
+            if (grade >= 6) return 'rgba(34, 197, 94, 0.2)';
+            if (grade >= 4) return 'rgba(132, 204, 22, 0.2)';
+            return 'rgba(55, 65, 81, 0.2)';
+        }
+
+        function getGradeTextColor(grade) {
+            grade = parseInt(grade);
+            if (grade >= 6) return '#22c55e';
+            if (grade >= 4) return '#84cc16';
+            return '#374151';
+        }
+
+        function loadData() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : { subjects: [], weightingEnabled: false };
+            } catch (error) {
+                console.error('Error loading data:', error);
+                return { subjects: [], weightingEnabled: false };
+            }
+        }
+
+        function saveData(data) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            } catch (error) {
+                console.error('Error saving data:', error);
+            }
+        }
+
+        function loadProfile() {
+            try {
+                const profile = localStorage.getItem(PROFILE_KEY);
+                return profile ? JSON.parse(profile) : { name: '', grade: '', picture: null };
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                return { name: '', grade: '', picture: null };
+            }
+        }
+
+        function saveProfile() {
+            const name = document.getElementById('profileName').value.trim();
+            const grade = document.getElementById('profileGrade').value.trim();
+            const fileInput = document.getElementById('profilePicture');
+            
+            const profile = { name, grade, picture: null };
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    profile.picture = e.target.result;
+                    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+                    renderProfileHeader();
+                    alert('Profile saved successfully!');
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+                renderProfileHeader();
+                alert('Profile saved successfully!');
+            }
+        }
+
+        function updateProfilePreview() {
+            const fileInput = document.getElementById('profilePicture');
+            const preview = document.getElementById('profilePreview');
+            
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.style.backgroundImage = `url(${e.target.result})`;
+                    preview.style.backgroundSize = 'cover';
+                    preview.textContent = '';
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        function renderProfileHeader() {
+            const profile = loadProfile();
+            const header = document.getElementById('profileHeader');
+            
+            if (!profile.name && !profile.grade) {
+                header.innerHTML = `<div class="profile-picture" style="margin-left: auto;"></div>`;
+            } else {
+                let initials = '';
+                if (profile.name) {
+                    const parts = profile.name.split(' ');
+                    initials = parts.map(p => p[0]).join('').toUpperCase();
+                }
+                
+                let pic = '';
+                if (profile.picture) {
+                    pic = `style="background-image: url('${profile.picture}'); background-size: cover;"`;
+                } else {
+                    pic = `style="background-color: var(--teal-primary);"`;
+                }
+
+                header.innerHTML = `
+                    <div class="profile-info">
+                        <div class="profile-text">
+                            ${profile.name ? `<div class="profile-name">${profile.name}</div>` : ''}
+                            ${profile.grade ? `<div class="profile-grade">${profile.grade}</div>` : ''}
+                        </div>
+                        <div class="profile-picture" ${pic}>${!profile.picture ? initials : ''}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function calculateSubjectGrade(subject) {
+            if (!subject.weights || subject.weights.length === 0) {
+                if (!subject.assessments || subject.assessments.length === 0) return 'N/A';
+                const sum = subject.assessments.reduce((acc, a) => acc + (a.grade || 0), 0);
+                return Math.floor(sum / subject.assessments.length);
+            }
+
+            let totalWeightedGrade = 0;
+            let totalWeight = 0;
+
+            subject.weights.forEach(weight => {
+                if (weight.assessments && weight.assessments.length > 0) {
+                    const categoryAverage = weight.assessments.reduce((sum, a) => sum + (a.grade || 0), 0) / weight.assessments.length;
+                    totalWeightedGrade += categoryAverage * (weight.percent / 100);
+                    totalWeight += weight.percent;
+                }
+            });
+
+            return totalWeight > 0 ? Math.floor(totalWeightedGrade) : 'N/A';
+        }
+
+        function toggleWeighting() {
+            const data = loadData();
+            data.weightingEnabled = document.getElementById('weightingEnabled').checked;
+            saveData(data);
+        }
+
+        function addSubject(name, level) {
+            const data = loadData();
+            if (data.subjects.length >= MAX_SUBJECTS) {
+                alert('Maximum 6 subjects reached');
+                return;
+            }
+            const newSubject = {
+                id: Date.now().toString(),
+                name,
+                level,
+                assessments: [],
+                weights: []
+            };
+            data.subjects.push(newSubject);
+            saveData(data);
+            renderDashboard();
+            updateTrendsCheckboxes();
+        }
+
+        function deleteSubject(id) {
+            if (!confirm('Are you sure you want to delete this subject?')) return;
+            const data = loadData();
+            data.subjects = data.subjects.filter(s => s.id !== id);
+            saveData(data);
+            renderDashboard();
+            updateTrendsCheckboxes();
+            closeAllModals();
+        }
+
+        function addAssessment(subjectId, name, grade, percentage, rawGrade, date, notes) {
+            const data = loadData();
+            const subject = data.subjects.find(s => s.id === subjectId);
+            if (subject) {
+                const newAssessment = {
+                    id: Date.now().toString(),
+                    name,
+                    grade: parseInt(grade),
+                    percentage: percentage ? parseFloat(percentage) : null,
+                    rawGrade,
+                    date,
+                    notes
+                };
+                subject.assessments.push(newAssessment);
+                saveData(data);
+                renderDashboard();
+                renderSubjectDetails(subjectId);
+                openSubjectDetailsModal();
+                updateTrendsChart();
+            }
+        }
+
+        function addWeightedAssessment(subjectId, weightCategoryId, name, grade, percentage, rawGrade, date, notes) {
+            const data = loadData();
+            const subject = data.subjects.find(s => s.id === subjectId);
+            if (subject) {
+                const weight = subject.weights.find(w => w.id === weightCategoryId);
+                if (weight) {
+                    const newAssessment = {
+                        id: Date.now().toString(),
+                        name,
+                        grade: parseInt(grade),
+                        percentage: percentage ? parseFloat(percentage) : null,
+                        rawGrade,
+                        date,
+                        notes
+                    };
+                    if (!weight.assessments) weight.assessments = [];
+                    weight.assessments.push(newAssessment);
+                    saveData(data);
+                    renderDashboard();
+                    renderWeightedAssessments(subjectId, weightCategoryId);
+                    updateTrendsChart();
+                }
+            }
+        }
+
+        function deleteAssessment(subjectId, assessmentId) {
+            if (!confirm('Delete this assessment?')) return;
+            const data = loadData();
+            const subject = data.subjects.find(s => s.id === subjectId);
+            if (subject) {
+                subject.assessments = subject.assessments.filter(a => a.id !== assessmentId);
+                saveData(data);
+                renderSubjectDetails(subjectId);
+                renderDashboard();
+                updateTrendsChart();
+            }
+        }
+
+        function deleteWeightedAssessment(subjectId, weightCategoryId, assessmentId) {
+            if (!confirm('Delete this assessment?')) return;
+            const data = loadData();
+            const subject = data.subjects.find(s => s.id === subjectId);
+            if (subject) {
+                const weight = subject.weights.find(w => w.id === weightCategoryId);
+                if (weight) {
+                    weight.assessments = weight.assessments.filter(a => a.id !== assessmentId);
+                    saveData(data);
+                    renderWeightedAssessments(subjectId, weightCategoryId);
+                    renderDashboard();
+                    updateTrendsChart();
+                }
+            }
+        }
+
+        function deleteWeightCategory(subjectId, weightCategoryId) {
+            if (!confirm('Delete this category? All assessments in it will be deleted.')) return;
+            const data = loadData();
+            const subject = data.subjects.find(s => s.id === subjectId);
+            if (subject) {
+                subject.weights = subject.weights.filter(w => w.id !== weightCategoryId);
+                saveData(data);
+                renderWeightsList(subjectId);
+                renderDashboard();
+            }
+        }
+
+        function renderDashboard() {
+            const data = loadData();
+            const grid = document.getElementById('subjectsGrid');
+            
+            grid.innerHTML = '';
+
+            data.subjects.forEach((subject) => {
+                const card = document.createElement('div');
+                card.className = 'subject-card';
+                
+                const predictedGrade = calculateSubjectGrade(subject);
+                const gradeClass = getGradeClass(predictedGrade);
+
+                card.innerHTML = `
+                    <div class="subject-header">
+                        <div class="subject-name">${subject.name}</div>
+                        <div class="subject-level">${subject.level}</div>
+                    </div>
+                    <div class="subject-grade ${gradeClass}">${predictedGrade}</div>
+                    <div class="subject-meta">${(subject.assessments?.length || 0) + (subject.weights?.reduce((sum, w) => sum + (w.assessments?.length || 0), 0) || 0)} assessments</div>
+                `;
+                
+                card.onclick = () => viewSubjectDetails(subject.id);
+                grid.appendChild(card);
+            });
+
+            const canAddMore = data.subjects.length < MAX_SUBJECTS;
+            const addCard = document.createElement('div');
+            addCard.className = 'add-subject-card' + (canAddMore ? '' : ' disabled');
+            const button = document.createElement('button');
+            button.textContent = '+ Add Subject';
+            if (!canAddMore) {
+                button.disabled = true;
+            } else {
+                button.onclick = (e) => {
+                    e.preventDefault();
+                    openAddSubjectModal();
+                };
+            }
+            addCard.appendChild(button);
+            grid.appendChild(addCard);
+
+            document.getElementById('maxSubjectsWarning').style.display = data.subjects.length >= MAX_SUBJECTS ? 'block' : 'none';
+            document.getElementById('weightedLabel').style.display = data.weightingEnabled ? 'inline' : 'none';
+
+            updateTotalScore();
+        }
+
+        function updateTotalScore() {
+            const data = loadData();
+            const total = data.subjects.reduce((sum, subject) => {
+                const grade = calculateSubjectGrade(subject);
+                return sum + (grade === 'N/A' ? 0 : parseInt(grade));
+            }, 0);
+            document.getElementById('totalScore').textContent = total;
+        }
+
+        function renderSubjectDetails(subjectId) {
+            const data = loadData();
+            const subject = data.subjects.find(s => s.id === subjectId);
+            
+            if (!subject) return;
+
+            document.getElementById('detailsSubjectName').textContent = subject.name;
+            document.getElementById('detailsSubjectLevel').textContent = `Level: ${subject.level}`;
+            
+            const predictedGrade = calculateSubjectGrade(subject);
+            const gradeElement = document.getElementById('detailsPredictedGrade');
+            gradeElement.textContent = predictedGrade;
+            gradeElement.style.backgroundColor = getGradeColor(predictedGrade === 'N/A' ? 0 : predictedGrade);
+            gradeElement.style.color = getGradeTextColor(predictedGrade === 'N/A' ? 0 : predictedGrade);
+
+            const list = document.getElementById('assessmentsList');
+            
+            if (data.weightingEnabled && subject.weights && subject.weights.length > 0) {
+                document.getElementById('addAssessmentBtn').textContent = 'Modify Weights';
+                list.innerHTML = subject.weights.map(weight => `
+                    <div class="weight-item" onclick="openWeightCategory('${subject.id}', '${weight.id}')">
+                        <div class="weight-info">
+                            <div class="weight-name">${weight.name}</div>
+                            <div class="weight-percent">${weight.percent}% • ${weight.assessments?.length || 0} assessments</div>
+                        </div>
+                        <div class="weight-actions">
+                            <button class="btn btn-danger" onclick="event.stopPropagation(); deleteWeightCategory('${subject.id}', '${weight.id}')">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else if (data.weightingEnabled) {
+                document.getElementById('addAssessmentBtn').textContent = 'Setup Weights';
+                list.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No weight categories set. Click "Setup Weights" to create categories.</p>';
+            } else {
+                document.getElementById('addAssessmentBtn').textContent = 'Add Assessment';
+                if (subject.assessments.length === 0) {
+                    list.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No assessments yet. Add one to get started!</p>';
+                } else {
+                    list.innerHTML = subject.assessments.map(assessment => {
+                        const gradeBg = getGradeColor(assessment.grade);
+                        const gradeText = getGradeTextColor(assessment.grade);
+                        
+                        return `
+                            <div class="assessment-item">
+                                <div class="assessment-info">
+                                    <h4>${assessment.name}</h4>
+                                    <div class="assessment-grade" style="background-color: ${gradeBg}; color: ${gradeText};">Grade: ${assessment.grade}</div>
+                                    ${assessment.percentage ? `<p>Percentage: ${assessment.percentage}%</p>` : ''}
+                                    ${assessment.rawGrade ? `<p>Raw: ${assessment.rawGrade}</p>` : ''}
+                                    <p>${assessment.date}</p>
+                                    ${assessment.notes ? `<p><em>${assessment.notes}</em></p>` : ''}
+                                </div>
+                                <div class="assessment-actions">
+                                    <button class="btn btn-danger" onclick="deleteAssessment('${subject.id}', '${assessment.id}')">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        }
+
+        function renderWeightsList(subjectId) {
+            const data = loadData();
+            const subject = data.subjects.find(s => s.id === subjectId);
+            if (!subject) return;
+
+            document.getElementById('weightingSubjectName').textContent = subject.name;
+            
+            const hasWeights = subject.weights && subject.weights.length > 0;
+            document.getElementById('weightingTitle').textContent = hasWeights ? 'Modify Weights' : 'Setup Weights';
+            
+            const list = document.getElementById('weightsList');
+
+            const totalWeight = subject.weights.reduce((sum, w) => sum + w.percent, 0);
+            document.getElementById('weightTotal').textContent = totalWeight;
+
+            if (totalWeight > 100) {
+                document.getElementById('weightWarning').style.display = 'block';
+                document.getElementById('weightWarning').classList.remove('success');
+                document.getElementById('weightWarning').textContent = `⚠️ Total weight exceeds 100% (${totalWeight}%). Please adjust.`;
+            } else if (totalWeight === 100) {
+                document.getElementById('weightWarning').style.display = 'block';
+                document.getElementById('weightWarning').classList.add('success');
+                document.getElementById('weightWarning').textContent = `✓ Total weight is perfect (100%)`;
+            } else {
+                document.getElementById('weightWarning').style.display = 'none';
+            }
+
+            list.innerHTML = subject.weights.map(weight => `
+                <div class="weight-item">
+                    <div class="weight-info">
+                        <div class="weight-name">${weight.name}</div>
+                        <div class="weight-percent">${weight.percent}%</div>
+                    </div>
+                    <div class="weight-actions">
+                        <button class="btn btn-secondary" onclick="deleteWeightCategory('${subject.id}', '${weight.id}')">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderWeightedAssessments(subjectId, weightCategoryId) {
+            const data = loadData();
+            const subject = data.subjects.find(s => s.id === subjectId);
+            if (!subject) return;
+
+            const weight = subject.weights.find(w => w.id === weightCategoryId);
+            if (!weight) return;
+
+            document.getElementById('weightCategoryTitle').textContent = weight.name;
+            document.getElementById('weightCategoryPercent').textContent = `Weight: ${weight.percent}%`;
+
+            const list = document.getElementById('weightedAssessmentsList');
+            if (!weight.assessments || weight.assessments.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No assessments yet. Add one to get started!</p>';
+            } else {
+                list.innerHTML = weight.assessments.map(assessment => {
+                    const gradeBg = getGradeColor(assessment.grade);
+                    const gradeText = getGradeTextColor(assessment.grade);
+                    
+                    return `
+                        <div class="assessment-item">
+                            <div class="assessment-info">
+                                <h4>${assessment.name}</h4>
+                                <div class="assessment-grade" style="background-color: ${gradeBg}; color: ${gradeText};">Grade: ${assessment.grade}</div>
+                                ${assessment.percentage ? `<p>Percentage: ${assessment.percentage}%</p>` : ''}
+                                ${assessment.rawGrade ? `<p>Raw: ${assessment.rawGrade}</p>` : ''}
+                                <p>${assessment.date}</p>
+                                ${assessment.notes ? `<p><em>${assessment.notes}</em></p>` : ''}
+                            </div>
+                            <div class="assessment-actions">
+                                <button class="btn btn-danger" onclick="deleteWeightedAssessment('${subject.id}', '${weight.id}', '${assessment.id}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function closeAllModals() {
+            document.getElementById('addSubjectModal').classList.remove('active');
+            document.getElementById('subjectDetailsModal').classList.remove('active');
+            document.getElementById('addAssessmentModal').classList.remove('active');
+            document.getElementById('weightingModal').classList.remove('active');
+            document.getElementById('weightCategoryModal').classList.remove('active');
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        function openAddSubjectModal() {
+            document.getElementById('subjectName').value = '';
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.level === 'SL') btn.classList.add('active');
+            });
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('addSubjectModal').classList.add('active');
+        }
+
+        function setSubjectLevel(button) {
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        }
+
+        function handleAddSubject(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('subjectName').value.trim();
+            const level = document.querySelector('.toggle-btn.active').dataset.level;
+
+            if (!name) {
+                alert('Please enter subject name');
+                return;
+            }
+
+            addSubject(name, level);
+            closeAllModals();
+        }
+
+        function viewSubjectDetails(subjectId) {
+            currentSubjectId = subjectId;
+            renderSubjectDetails(subjectId);
+            openSubjectDetailsModal();
+        }
+
+        function openSubjectDetailsModal() {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('subjectDetailsModal').classList.add('active');
+        }
+
+        function deleteSubjectFromDetails() {
+            deleteSubject(currentSubjectId);
+        }
+
+        function openAddAssessmentModal() {
+            const data = loadData();
+            if (data.weightingEnabled) {
+                openWeightingModal();
+            } else {
+                document.getElementById('assessmentName').value = '';
+                document.getElementById('assessmentGrade').value = '';
+                document.getElementById('assessmentPercentage').value = '';
+                document.getElementById('assessmentRawGrade').value = '';
+                document.getElementById('assessmentNotes').value = '';
+                
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('assessmentDate').value = today;
+                
+                isAddingWeightedAssessment = false;
+                document.getElementById('subjectDetailsModal').classList.remove('active');
+                document.getElementById('addAssessmentModal').classList.add('active');
+            }
+        }
+
+        function openWeightingModal() {
+            renderWeightsList(currentSubjectId);
+            document.getElementById('weightCategoryInput').value = '';
+            document.getElementById('weightPercentInput').value = '';
+            document.getElementById('subjectDetailsModal').classList.remove('active');
+            document.getElementById('weightingModal').classList.add('active');
+        }
+
+        function addWeightCategory() {
+            const name = document.getElementById('weightCategoryInput').value.trim();
+            const percent = parseInt(document.getElementById('weightPercentInput').value);
+
+            if (!name || isNaN(percent) || percent <= 0) {
+                alert('Please enter valid category name and percentage');
+                return;
+            }
+
+            const data = loadData();
+            const subject = data.subjects.find(s => s.id === currentSubjectId);
+            if (!subject) return;
+
+            const currentTotal = subject.weights.reduce((sum, w) => sum + w.percent, 0);
+            if (currentTotal + percent > 100) {
+                alert(`Total weight cannot exceed 100%. Current: ${currentTotal}%, Adding: ${percent}%`);
+                return;
+            }
+
+            subject.weights.push({
+                id: Date.now().toString(),
+                name,
+                percent,
+                assessments: []
+            });
+
+            saveData(data);
+            document.getElementById('weightCategoryInput').value = '';
+            document.getElementById('weightPercentInput').value = '';
+            renderWeightsList(currentSubjectId);
+        }
+
+        function openWeightCategory(subjectId, weightCategoryId) {
+            currentSubjectId = subjectId;
+            currentWeightCategoryId = weightCategoryId;
+            renderWeightedAssessments(subjectId, weightCategoryId);
+            document.getElementById('weightingModal').classList.remove('active');
+            document.getElementById('weightCategoryModal').classList.add('active');
+        }
+
+        function goBackToWeighting() {
+            document.getElementById('weightCategoryModal').classList.remove('active');
+            document.getElementById('weightingModal').classList.add('active');
+        }
+
+        function openAddWeightedAssessmentModal() {
+            document.getElementById('assessmentName').value = '';
+            document.getElementById('assessmentGrade').value = '';
+            document.getElementById('assessmentPercentage').value = '';
+            document.getElementById('assessmentRawGrade').value = '';
+            document.getElementById('assessmentNotes').value = '';
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('assessmentDate').value = today;
+            
+            isAddingWeightedAssessment = true;
+            document.getElementById('weightCategoryModal').classList.remove('active');
+            document.getElementById('addAssessmentModal').classList.add('active');
+        }
+
+        function cancelAddAssessment() {
+            closeAllModals();
+            if (isAddingWeightedAssessment) {
+                document.getElementById('modalOverlay').classList.add('active');
+                document.getElementById('weightCategoryModal').classList.add('active');
+            } else {
+                document.getElementById('modalOverlay').classList.add('active');
+                document.getElementById('subjectDetailsModal').classList.add('active');
+            }
+        }
+
+        function handleAddAssessment(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('assessmentName').value.trim();
+            const grade = document.getElementById('assessmentGrade').value;
+            const percentage = document.getElementById('assessmentPercentage').value;
+            const rawGrade = document.getElementById('assessmentRawGrade').value.trim();
+            const date = document.getElementById('assessmentDate').value;
+            const notes = document.getElementById('assessmentNotes').value.trim();
+
+            if (!name || !grade) {
+                alert('Please fill in required fields');
+                return;
+            }
+
+            if (isAddingWeightedAssessment) {
+                addWeightedAssessment(currentSubjectId, currentWeightCategoryId, name, grade, percentage, rawGrade, date, notes);
+                document.getElementById('addAssessmentModal').classList.remove('active');
+                document.getElementById('weightCategoryModal').classList.add('active');
+            } else {
+                addAssessment(currentSubjectId, name, grade, percentage, rawGrade, date, notes);
+                document.getElementById('addAssessmentModal').classList.remove('active');
+            }
+        }
+
+        function switchView(viewName) {
+            document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+
+            document.getElementById(viewName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (viewName === 'trends') {
+                updateTrendsCheckboxes();
+                setTimeout(() => updateTrendsChart(), 100);
+            } else if (viewName === 'settings') {
+                const data = loadData();
+                const profile = loadProfile();
+                document.getElementById('weightingEnabled').checked = data.weightingEnabled;
+                document.getElementById('profileName').value = profile.name || '';
+                document.getElementById('profileGrade').value = profile.grade || '';
+                updateStats();
+            }
+        }
+
+        function updateTrendsCheckboxes() {
+            const data = loadData();
+            const container = document.getElementById('subjectCheckboxes');
+            
+            if (data.subjects.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary);">No subjects yet</p>';
+                return;
+            }
+
+            container.innerHTML = data.subjects.map((subject, index) => `
+                <div class="checkbox-option">
+                    <input type="checkbox" id="subject_${subject.id}" value="${subject.id}" checked>
+                    <label for="subject_${subject.id}">${subject.name}</label>
+                    <div class="checkbox-color" style="background-color: ${subjectColors[index % subjectColors.length]}"></div>
+                </div>
+            `).join('');
+        }
+
+        function updateTrendsChart() {
+            const data = loadData();
+            const canvas = document.getElementById('trendsChart');
+            const ctx = canvas.getContext('2d');
+
+            const selectedSubjects = Array.from(document.querySelectorAll('#subjectCheckboxes input:checked'))
+                .map(cb => cb.value);
+
+            if (data.subjects.length === 0 || selectedSubjects.length === 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'var(--text-secondary)';
+                ctx.font = '16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Add assessments to view trends', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            const allDates = new Set();
+            data.subjects.filter(s => selectedSubjects.includes(s.id)).forEach((subject) => {
+                if (subject.assessments && subject.assessments.length > 0) {
+                    subject.assessments.forEach(assessment => allDates.add(assessment.date));
+                }
+                if (subject.weights) {
+                    subject.weights.forEach(weight => {
+                        if (weight.assessments) {
+                            weight.assessments.forEach(assessment => allDates.add(assessment.date));
+                        }
+                    });
+                }
+            });
+
+            const sortedDates = Array.from(allDates).sort();
+
+            if (sortedDates.length === 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'var(--text-secondary)';
+                ctx.font = '16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Add assessments with dates to view trends', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            const datasets = [];
+            data.subjects.filter(s => selectedSubjects.includes(s.id)).forEach((subject, index) => {
+                const grades = sortedDates.map(date => {
+                    let assessment = subject.assessments?.find(a => a.date === date);
+                    if (!assessment && subject.weights) {
+                        for (let weight of subject.weights) {
+                            const found = weight.assessments?.find(a => a.date === date);
+                            if (found) {
+                                assessment = found;
+                                break;
+                            }
+                        }
+                    }
+                    return assessment ? assessment.grade || null : null;
+                });
+
+                datasets.push({
+                    label: subject.name,
+                    data: grades,
+                    borderColor: subjectColors[index % subjectColors.length],
+                    backgroundColor: `${subjectColors[index % subjectColors.length]}20`,
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 5,
+                    pointBackgroundColor: subjectColors[index % subjectColors.length],
+                    borderWidth: 2
+                });
+            });
+
+            if (trendsChart) {
+                trendsChart.destroy();
+            }
+
+            trendsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: 'var(--text-primary)',
+                                font: { size: 12, weight: '600' }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 7,
+                            ticks: {
+                                color: 'var(--text-primary)',
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: 'var(--border-color)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'var(--text-primary)',
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: 'var(--border-color)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function exportData() {
+            const data = loadData();
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ib-tracker-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        if (!data.subjects || !Array.isArray(data.subjects)) {
+                            alert('Invalid file format');
+                            return;
+                        }
+                        if (data.subjects.length > MAX_SUBJECTS) {
+                            alert(`Maximum ${MAX_SUBJECTS} subjects allowed. Imported data has ${data.subjects.length}`);
+                            return;
+                        }
+                        saveData(data);
+                        alert('Data imported successfully!');
+                        renderDashboard();
+                        updateTrendsCheckboxes();
+                    } catch (error) {
+                        alert('Error reading file: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function clearAllData() {
+            if (!confirm('Are you sure? This will delete all data and cannot be undone!')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            renderDashboard();
+            updateTrendsCheckboxes();
+            alert('All data cleared');
+        }
+
+        function updateStats() {
+            const data = loadData();
+            const totalSubjects = data.subjects.length;
+            const totalAssessments = data.subjects.reduce((sum, s) => {
+                const regular = s.assessments?.length || 0;
+                const weighted = s.weights?.reduce((wsum, w) => wsum + (w.assessments?.length || 0), 0) || 0;
+                return sum + regular + weighted;
+            }, 0);
+            const averageGrade = totalSubjects > 0 ? (data.subjects.reduce((sum, s) => {
+                const grade = calculateSubjectGrade(s);
+                return sum + (grade === 'N/A' ? 0 : parseInt(grade));
+            }, 0) / totalSubjects).toFixed(2) : 0;
+
+            document.getElementById('statsDisplay').innerHTML = `
+                <p><strong>Total Subjects:</strong> ${totalSubjects}</p>
+                <p><strong>Total Assessments:</strong> ${totalAssessments}</p>
+                <p><strong>Average Grade:</strong> ${averageGrade}</p>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDashboard();
+            renderProfileHeader();
+            updateTrendsCheckboxes();
+            updateStats();
+        });
+    </script>
+</body>
+</html>
